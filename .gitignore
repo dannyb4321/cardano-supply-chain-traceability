@@ -1,0 +1,4 @@
+keys/*.skey
+.env
+__pycache__/
+*.png
