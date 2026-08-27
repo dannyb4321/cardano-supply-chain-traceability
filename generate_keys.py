@@ -1,64 +1,30 @@
 import os
-import json
-import qrcode
-from dotenv import load_dotenv
-from blockfrost import BlockFrostApi, ApiUrls, ApiError
+from pycardano import PaymentSigningKey, PaymentVerificationKey, Address, Network
 
-# Cargar variables del archivo .env local
-load_dotenv()
-
-BLOCKFROST_PROJECT_ID = os.getenv("BLOCKFROST_PROJECT_ID")
-TARGET_ADDRESS = os.getenv("TARGET_ADDRESS")
-TX_HASH = "4644c89df2e6ab8dd732688b3ae5ed0646a3e1e0b050371d6862f77abcd227cc"
-
-# Conexión con Blockfrost Preprod
-api = BlockFrostApi(
-    project_id=BLOCKFROST_PROJECT_ID,
-    base_url=ApiUrls.preprod.value
-)
-
-def generar_qr_auditoria(tx_hash: str):
+def generar_claves_backend():
     print("=" * 65)
-    print("GENERADOR DE CERTIFICADO & QR DE TRAZABILIDAD ON-CHAIN")
+    print("GENERADOR DE CLAVES CRIPTOGRÁFICAS - CARDANO BACKEND")
     print("=" * 65)
-
-    explorer_url = f"https://preprod.cardanoscan.io/transaction/{tx_hash}"
-
-    try:
-        metadata = api.transaction_metadata(hash=tx_hash)
-        
-        print(f"\n[+] Validando datos de la transacción en Cardano:")
-        print(f"  • Tx Hash: {tx_hash}")
-        print(f"  • Enlace de Explorador: {explorer_url}")
-
-        if metadata:
-            print("\n[+] Metadatos verificados exitosamente:")
-            for item in metadata:
-                print(f"  • Label: {item.label} | Payload: {item.json_metadata}")
-
-        # Configuración y generación del QR
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(explorer_url)
-        qr.make(fit=True)
-
-        img = qr.make_image(fill_color="#003366", back_color="white")
-        output_file = "remito_qr_cardano.png"
-        img.save(output_file)
-
-        print("\n" + "=" * 65)
-        print(f"✅ QR generado exitosamente: {output_file}")
-        print("Escaneá la imagen generada con tu celular para abrir el registro on-chain.")
-        print("=" * 65)
-
-    except ApiError as e:
-        print(f"[-] Error al consultar Blockfrost: {e}")
-    except Exception as e:
-        print(f"[-] Error: {e}")
+    
+    os.makedirs("keys", exist_ok=True)
+    
+    skey = PaymentSigningKey.generate()
+    vkey = PaymentVerificationKey.from_signing_key(skey)
+    
+    skey_path = "keys/backend_payment.skey"
+    vkey_path = "keys/backend_payment.vkey"
+    
+    skey.save(skey_path)
+    vkey.save(vkey_path)
+    
+    backend_address = Address(payment_part=vkey.hash(), network=Network.TESTNET)
+    
+    print(f"\n✅ Claves generadas exitosamente:")
+    print(f"  • Clave Privada (skey): {skey_path}")
+    print(f"  • Clave Pública (vkey): {vkey_path}")
+    print(f"\n📬 DIRECCIÓN PÚBLICA DEL BACKEND (Preprod):")
+    print(f"  {backend_address}")
+    print("\n" + "=" * 65)
 
 if __name__ == "__main__":
-    generar_qr_auditoria(TX_HASH)
+    generar_claves_backend()

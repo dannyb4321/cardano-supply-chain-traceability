@@ -1,4 +1,4 @@
-keys/*.skey
+keys/
 .env
 __pycache__/
 *.png
