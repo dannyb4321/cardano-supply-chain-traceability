@@ -29,18 +29,20 @@ def emitir_remito_cip20(articulo: str, lote: str, unidades: int, origen: str, de
         print(f"[-] Error: No se encontró la clave privada en {KEY_PATH}.")
         return
 
+    # 1. Configurar contexto de red con Blockfrost Preprod
     context = BlockFrostChainContext(
         project_id=BLOCKFROST_PROJECT_ID,
         base_url="https://cardano-preprod.blockfrost.io/api"
     )
 
+    # 2. Cargar llaves criptográficas del backend
     skey = PaymentSigningKey.load(KEY_PATH)
     vkey = PaymentVerificationKey.from_signing_key(skey)
     sender_addr = Address(payment_part=vkey.hash(), network=Network.TESTNET)
 
     print(f"[+] Dirección de emisión (Backend): {sender_addr}")
 
-    # Payload estándar CIP-20 (Label 674)
+    # 3. Payload CIP-20 (Label 674)
     remito_cip20_payload = {
         674: {
             "msg": [
@@ -56,10 +58,10 @@ def emitir_remito_cip20(articulo: str, lote: str, unidades: int, origen: str, de
         }
     }
 
+    # 4. Construcción y balanceo de la transacción
     builder = TransactionBuilder(context)
     builder.add_input_address(sender_addr)
     
-    # Envío de 1.5 tADA de UTXO a la dirección de auditoría
     dest_address = Address.from_primitive(TARGET_ADDRESS)
     builder.add_output(TransactionOutput(dest_address, Value(1500000)))
 
@@ -72,10 +74,11 @@ def emitir_remito_cip20(articulo: str, lote: str, unidades: int, origen: str, de
         change_address=sender_addr
     )
 
+    # 5. Envío a la blockchain
     print("[+] Transmitiendo transacción a Cardano Preprod...")
     context.submit_tx(signed_tx)
 
-    tx_hash = signed_tx.transaction_body.hash().to_primitive().hex()
+    tx_hash = signed_tx.transaction_body.hash().hex()
     explorer_url = f"https://preprod.cardanoscan.io/transaction/{tx_hash}"
 
     print("\n" + "=" * 65)
