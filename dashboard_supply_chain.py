@@ -6,7 +6,8 @@ from blockfrost import BlockFrostApi, ApiError
 
 load_dotenv()
 
-BLOCKFROST_PROJECT_ID = os.getenv("BLOCKFROST_PROJECT_ID") or st.secrets.get("BLOCKFROST_PROJECT_ID" , "").strip()
+BLOCKFROST_PROJECT_ID = (os.getenv("BLOCKFROST_PROJECT_ID") or st.secrets.get("BLOCKFROST_PROJECT_ID", "")).strip()
+TARGET_ADDRESS = (os.getenv("TARGET_ADDRESS") or st.secrets.get("TARGET_ADDRESS", "")).strip()
 
 st.set_page_config(
     page_title="Cardano Supply Chain Traceability",
