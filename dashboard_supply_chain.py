@@ -103,7 +103,7 @@ def cargar_eventos_on_chain(remito_filtro):
                 })
     except Exception as e:
         st.error(f"Error consultando Blockfrost: {e}")
-    return eventos
+    return pd.DataFrame(eventos)
 df_eventos = cargar_eventos_on_chain(remito_target)
 
 if df_eventos.empty:
