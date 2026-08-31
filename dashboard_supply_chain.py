@@ -31,11 +31,24 @@ actualizar = st.sidebar.button("Consultar Blockchain")
 def cargar_eventos_on_chain(remito_filtro):
     eventos = []
     try:
-        metadatas = api.metadata_label_json(label="674", count=50, order="desc")
-        for item in metadatas:
-            tx_hash = item.tx_hash
-            json_data = item.json_metadata
-            
+        # Consulta directamente el historial de tu billetera
+        txs = api.address_transactions(TARGET_ADDRESS, order="desc", count=50)
+        for tx in txs:
+            tx_hash = tx.tx_hash
+            try:
+                meta_list = api.transaction_metadata(tx_hash)
+            except Exception:
+                continue
+
+            json_data = None
+            for m in meta_list:
+                if str(m.label) == "674":
+                    json_data = m.json_metadata
+                    break
+
+            if not json_data:
+                continue
+
             # Compatibilidad para Namespace y dict de Blockfrost
             if hasattr(json_data, "msg"):
                 msg_list = json_data.msg
@@ -43,7 +56,7 @@ def cargar_eventos_on_chain(remito_filtro):
                 msg_list = json_data.get("msg", [])
             else:
                 msg_list = []
-            
+
             if isinstance(msg_list, str):
                 msg_list = [msg_list]
 
@@ -51,7 +64,7 @@ def cargar_eventos_on_chain(remito_filtro):
             if remito_filtro in raw_text:
                 tx_info = api.transaction(tx_hash)
                 block_info = api.block(tx_info.block)
-                
+
                 evento_tipo = "DESPACHO" if any("REMITO-CIP20" in str(m) for m in msg_list) else "ACTUALIZACION"
                 estado = "DESPACHADO EN ORIGEN"
                 balance = "N/A"
@@ -88,15 +101,9 @@ def cargar_eventos_on_chain(remito_filtro):
                     "Parent Hash": parent_tx,
                     "Cardanoscan": f"https://preprod.cardanoscan.io/transaction/{tx_hash}"
                 })
-        
-        df = pd.DataFrame(eventos)
-        if not df.empty:
-            df = df.sort_values(by="Timestamp (UTC)", ascending=True).reset_index(drop=True)
-        return df
-    except ApiError as e:
+    except Exception as e:
         st.error(f"Error consultando Blockfrost: {e}")
-        return pd.DataFrame()
-
+    return eventos
 df_eventos = cargar_eventos_on_chain(remito_target)
 
 if df_eventos.empty:
