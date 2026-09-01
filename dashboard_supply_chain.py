@@ -1,8 +1,10 @@
 import os
+import io
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
 from blockfrost import BlockFrostApi, ApiError
+from fpdf import FPDF
 
 load_dotenv()
 
@@ -31,7 +33,6 @@ actualizar = st.sidebar.button("Consultar Blockchain")
 def cargar_eventos_on_chain(remito_filtro):
     eventos = []
     try:
-        # Consulta directamente el historial de tu billetera
         txs = api.address_transactions(TARGET_ADDRESS, order="desc", count=50)
         for tx in txs:
             tx_hash = tx.tx_hash
@@ -49,7 +50,6 @@ def cargar_eventos_on_chain(remito_filtro):
             if not json_data:
                 continue
 
-            # Compatibilidad para Namespace y dict de Blockfrost
             if hasattr(json_data, "msg"):
                 msg_list = json_data.msg
             elif isinstance(json_data, dict):
@@ -101,9 +101,108 @@ def cargar_eventos_on_chain(remito_filtro):
                     "Parent Hash": parent_tx,
                     "Cardanoscan": f"https://preprod.cardanoscan.io/transaction/{tx_hash}"
                 })
+        
+        df = pd.DataFrame(eventos)
+        if not df.empty:
+            df = df.sort_values(by="Timestamp (UTC)", ascending=True).reset_index(drop=True)
+        return df
     except Exception as e:
         st.error(f"Error consultando Blockfrost: {e}")
-    return pd.DataFrame(eventos)
+        return pd.DataFrame()
+
+def generar_acta_pdf(df, remito_id):
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    
+    # Encabezado Oficial
+    pdf.set_font("Helvetica", "B", 15)
+    pdf.set_text_color(30, 41, 59)
+    pdf.cell(0, 10, "ACTA OFICIAL DE AUDITORÍA Y TRAZABILIDAD ON-CHAIN", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.set_font("Helvetica", "I", 10)
+    pdf.set_text_color(100, 116, 139)
+    pdf.cell(0, 6, "Certificación Inmutable respaldada en Cardano Blockchain (CIP-20 / Label 674)", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.ln(5)
+    
+    # Línea divisoria
+    pdf.set_draw_color(203, 213, 225)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(6)
+    
+    # Resumen Ejecutivo
+    ultimo = df.iloc[-1]
+    hay_disc = df["Discrepancia"].any()
+    
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(30, 41, 59)
+    pdf.cell(50, 7, "ID de Remito Auditado:")
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(0, 7, f"{remito_id}", new_x="LMARGIN", new_y="NEXT")
+    
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(50, 7, "Dictamen de Stock:")
+    if hay_disc:
+        pdf.set_text_color(220, 38, 38)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(0, 7, "ALERTA: DISCREPANCIA DETECTADA EN CADENA DE CUSTODIA", new_x="LMARGIN", new_y="NEXT")
+    else:
+        pdf.set_text_color(22, 163, 74)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(0, 7, "CONFORME: Sin desvíos registrados", new_x="LMARGIN", new_y="NEXT")
+        
+    pdf.set_text_color(30, 41, 59)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(50, 7, "Último Estado Operativo:")
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(0, 7, f"{ultimo['Estado']} ({ultimo['Ubicación']})", new_x="LMARGIN", new_y="NEXT")
+    
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(50, 7, "Auditor de Cierre:")
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(0, 7, f"{ultimo['Auditor Responsable']}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(5)
+    
+    # Tabla de Eslabones Criptográficos
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_text_color(15, 23, 42)
+    pdf.cell(0, 8, "Historial de Eslabones y Evidencia Criptográfica:", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    
+    for idx, row in df.iterrows():
+        pdf.set_fill_color(241, 245, 249)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(30, 41, 59)
+        pdf.cell(0, 7, f" Eslabón #{idx+1}: {row['Estado']} | Fecha: {row['Timestamp (UTC)']}", fill=True, new_x="LMARGIN", new_y="NEXT")
+        
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(51, 65, 85)
+        pdf.cell(40, 5, " - Balance de Control:")
+        pdf.cell(0, 5, f"{row['Balance Físico']}", new_x="LMARGIN", new_y="NEXT")
+        
+        pdf.cell(40, 5, " - Ubicación / Auditor:")
+        pdf.cell(0, 5, f"{row['Ubicación']} | Resp: {row['Auditor Responsable']}", new_x="LMARGIN", new_y="NEXT")
+        
+        pdf.cell(40, 5, " - Tx Hash (On-Chain):")
+        pdf.set_font("Courier", "", 8)
+        pdf.cell(0, 5, f"{row['Tx Hash']}", new_x="LMARGIN", new_y="NEXT")
+        
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(40, 5, " - Parent Hash:")
+        pdf.set_font("Courier", "", 8)
+        pdf.cell(0, 5, f"{row['Parent Hash']}", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(3)
+
+    # Pie de página / Respaldo legal
+    pdf.ln(5)
+    pdf.set_draw_color(203, 213, 225)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(148, 163, 184)
+    pdf.multi_cell(0, 4, "Este documento certifica que los registros listados han sido minados en la blockchain pública de Cardano y son matemáticamente inmutables. Para verificar la autenticidad forense de cada hash, consulte preprod.cardanoscan.io.")
+    
+    return bytes(pdf.output())
+
 df_eventos = cargar_eventos_on_chain(remito_target)
 
 if df_eventos.empty:
@@ -122,6 +221,18 @@ else:
     else:
         col4.metric("Auditoría de Stock", "✅ 100% CONFORME", delta="Sin desvíos")
 
+    st.divider()
+    
+    # Botón de Descarga del Acta Oficial
+    pdf_bytes = generar_acta_pdf(df_eventos, remito_target)
+    st.download_button(
+        label="📥 Descargar Acta de Incidencia y Auditoría On-Chain (PDF)",
+        data=pdf_bytes,
+        file_name=f"Acta_Auditoria_{remito_target}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
+    
     st.divider()
     st.subheader("🔗 Cadena de Custodia Inmutable")
     
