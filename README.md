@@ -137,15 +137,3 @@ python cip20_metadata/update_remito_state.py
 PowerShell
 python -m streamlit run dashboard_supply_chain.py
 Acceder a http://localhost:8501 para auditar remitos y descargar el acta pericial con hash criptográfico y sello de tiempo on-chain.
-
-
----
-
-### Paso 2: Versionar y subir la documentación a GitHub
-
-En tu terminal de PowerShell, ejecutá:
-
-```powershell
-git add README.md
-git commit -m "docs: update comprehensive technical documentation and architecture specs"
-git push origin main
