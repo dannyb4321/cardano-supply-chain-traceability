@@ -11,30 +11,26 @@ El sistema implementa una arquitectura híbrida desacoplada:
 
 ## 🏗 Arquitectura del Sistema
 
-┌─────────────────────────────────┐
-                        │    Dador de Carga / Remitente   │
-                        └────────────────┬────────────────┘
-                                         │
-        ┌────────────────────────────────┴────────────────────────────────┐
-        │ CIP-20 (Metadata 674)                                           │ Plutus V3 Escrow
-        ▼                                                                 ▼
+```text
+                            ┌─────────────────────────────────┐
+                            │    Dador de Carga / Remitente   │
+                            └────────────────┬────────────────┘
+                                             │
+            ┌────────────────────────────────┴────────────────────────────────┐
+            │ CIP-20 (Metadata 674)                                           │ Plutus V3 Escrow
+            ▼                                                                 ▼
 ┌───────────────────────┐                                         ┌───────────────────────┐
 │ Eventos de Despacho,  │                                         │ Contrato Inteligente  │
 │ Tránsito y Auditoría  │                                         │  (Fondos Bloqueados)  │
 └───────────┬───────────┘                                         └───────────┬───────────┘
-│                                                                 │
-│ Consultas vía Blockfrost API                                    │ Verificación de firmas
-▼                                                                 ▼
+            │                                                                 │
+            │ Consultas vía Blockfrost API                                    │ Verificación de firmas
+            ▼                                                                 ▼
 ┌───────────────────────┐                                         ┌───────────────────────┐
 │   Dashboard Streamlit │ ◀───────────────────────────────────────│ Desbloqueo / Cobro    │
 │  y Reportes Forenses  │                                         │ (Auditor / Remitente) │
 └───────────────────────┘                                         └───────────────────────┘
 
----
-
-## 📁 Estructura del Repositorio
-
-```text
 cardano-supply-chain-traceability/
 ├── cip20_metadata/             # Capa de Trazabilidad e Inmutabilidad CIP-20
 │   ├── dispatch_remito_cip20.py      # Despacho inicial con metadatos on-chain
@@ -63,7 +59,7 @@ cardano-supply-chain-traceability/
 ├── requirements.txt            # Dependencias del entorno Python
 └── README.md                   # Documentación técnica
 
-Lógica del Smart Contract (supply_chain.ak)
+📜 Lógica del Smart Contract (supply_chain.ak)
 El validador logistics_escrow opera bajo el estándar Plutus V3, evaluando los siguientes parámetros en cada intento de consumo de un UTxO:
 
 Datum (SupplyChainDatum):
@@ -95,8 +91,8 @@ Cuenta en Blockfrost.io con proyecto activo en Cardano Preprod.
 2. Configuración de Entorno
 Clonar el repositorio y preparar el archivo de variables:
 
-PowerShell
-git clone [https://github.com/dannyb4321/cardano-supply-chain-traceability.git](https://github.com/dannyb4321/cardano-supply-chain-traceability.git)
+Bash
+git clone https://github.com/dannyb4321/cardano-supply-chain-traceability.git
 cd cardano-supply-chain-traceability
 python -m pip install -r requirements.txt
 Crear un archivo .env en la raíz:
@@ -105,11 +101,11 @@ Fragmento de código
 BLOCKFROST_PROJECT_ID=preprodXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 Generar el par de llaves si se inicializa desde cero:
 
-PowerShell
+Bash
 python generate_keys.py
 🚀 Guía de Ejecución
 1. Compilación y Test Unitario del Smart Contract
-PowerShell
+Bash
 cd supply_chain_contract
 aiken check
 aiken build
@@ -117,23 +113,23 @@ cd ..
 2. Operativa del Smart Contract Escrow
 Derivar la dirección de script:
 
-PowerShell
+Bash
 python escrow_contracts/inspect_contract.py
 Bloquear fondos en custodia (3 tADA + Datum):
 
-PowerShell
+Bash
 python escrow_contracts/lock_remito_escrow.py
 Liberar fondos por entrega conforme (Redeemer ConfirmDelivery):
 
-PowerShell
+Bash
 python escrow_contracts/unlock_remito_escrow.py
 3. Trazabilidad de Estados CIP-20
 Registrar despacho o actualización logística:
 
-PowerShell
+Bash
 python cip20_metadata/dispatch_remito_cip20.py
 python cip20_metadata/update_remito_state.py
 4. Lanzar el Panel de Auditoría y Exportación PDF
-PowerShell
+Bash
 python -m streamlit run dashboard_supply_chain.py
 Acceder a http://localhost:8501 para auditar remitos y descargar el acta pericial con hash criptográfico y sello de tiempo on-chain.
