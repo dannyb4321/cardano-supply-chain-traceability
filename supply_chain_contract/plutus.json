@@ -1,0 +1,102 @@
+{
+  "preamble": {
+    "title": "dannyb4321/supply_chain_contract",
+    "description": "Aiken contracts for project 'dannyb4321/supply_chain_contract'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.23+8949565"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "supply_chain.logistics_escrow.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/supply_chain~1SupplyChainDatum"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/supply_chain~1LogisticsAction"
+        }
+      },
+      "compiledCode": "59018501010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cdc3a400530070024888966002600460106ea800e26466453001159800980098059baa0028cc004c038c030dd500148c03cc040c040c040c040c040c040c040c04000644646600200200644b30010018a508acc004cdc79bae30120010038a518998010011809800a01c4045300b375400f2300f3010301000148888966002600c0051330033758600860226ea8024dd7180098089baa0058acc004c02800a2b3001330033758600860226ea8024dd7180098089baa0058998019bac3004301137540126eb8c04cc044dd5002c528201e8998019bac3004301137540126eb8c04cc044dd5002a01e403c8b201498059baa0079807001a444b300130040028acc004c03cdd5005400e2c80822b300130080028acc004c03cdd5005400e2c80822b30013370e90020014566002601e6ea802a007164041164034806900d0c030c034004dc3a400060126ea800e2c8038600e00260066ea801e29344d95900101",
+      "hash": "aec8010b405dec32ce54c2ebb7d2000685840225d72e031305767214"
+    },
+    {
+      "title": "supply_chain.logistics_escrow.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59018501010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cdc3a400530070024888966002600460106ea800e26466453001159800980098059baa0028cc004c038c030dd500148c03cc040c040c040c040c040c040c040c04000644646600200200644b30010018a508acc004cdc79bae30120010038a518998010011809800a01c4045300b375400f2300f3010301000148888966002600c0051330033758600860226ea8024dd7180098089baa0058acc004c02800a2b3001330033758600860226ea8024dd7180098089baa0058998019bac3004301137540126eb8c04cc044dd5002c528201e8998019bac3004301137540126eb8c04cc044dd5002a01e403c8b201498059baa0079807001a444b300130040028acc004c03cdd5005400e2c80822b300130080028acc004c03cdd5005400e2c80822b30013370e90020014566002601e6ea802a007164041164034806900d0c030c034004dc3a400060126ea800e2c8038600e00260066ea801e29344d95900101",
+      "hash": "aec8010b405dec32ce54c2ebb7d2000685840225d72e031305767214"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "aiken/crypto/VerificationKeyHash": {
+      "title": "VerificationKeyHash",
+      "dataType": "bytes"
+    },
+    "supply_chain/LogisticsAction": {
+      "title": "LogisticsAction",
+      "description": "Acciones operativas que pueden desbloquear o liquidar la custodia",
+      "anyOf": [
+        {
+          "title": "ConfirmDelivery",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "ReportDiscrepancy",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        },
+        {
+          "title": "CancelShipment",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": []
+        }
+      ]
+    },
+    "supply_chain/SupplyChainDatum": {
+      "title": "SupplyChainDatum",
+      "description": "Estado asociado a la carga / remito",
+      "anyOf": [
+        {
+          "title": "SupplyChainDatum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "sender",
+              "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+            },
+            {
+              "title": "transporter",
+              "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+            },
+            {
+              "title": "auditor",
+              "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+            },
+            {
+              "title": "remito_id",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

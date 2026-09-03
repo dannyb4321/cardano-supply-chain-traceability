@@ -1,0 +1,18 @@
+name = "dannyb4321/supply_chain_contract"
+version = "0.0.0"
+compiler = "v1.1.23"
+plutus = "v3"
+license = "Apache-2.0"
+description = "Aiken contracts for project 'dannyb4321/supply_chain_contract'"
+
+[repository]
+user = "dannyb4321"
+project = "supply_chain_contract"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "v3.1.0"
+source = "github"
+
+[config]
