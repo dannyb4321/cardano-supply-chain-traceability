@@ -1,0 +1,17 @@
+Detalle operativo con las nuevas carpetas:
+
+A partir de ahora, ejecutá siempre los scripts parándote desde la raíz del proyecto para que mantengan acceso a las carpetas keys/ y supply_chain_contract/:
+
+Custodia y Smart Contracts:
+
+PowerShell
+python escrow_contracts/lock_remito_escrow.py
+python escrow_contracts/unlock_remito_escrow.py
+Eventos y Trazabilidad CIP-20:
+
+PowerShell
+python cip20_metadata/update_remito_state.py
+Panel de Auditoría:
+
+PowerShell
+streamlit run dashboard_supply_chain.py

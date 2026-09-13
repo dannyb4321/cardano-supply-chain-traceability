@@ -1,0 +1,11 @@
+cdp_id,collateral_ada,minted_iusd,owner_ref
+CDP-001,25000,5000,Whale_Alpha
+CDP-002,15000,4500,Trader_Beta
+CDP-003,50000,12000,Treasury_DAO
+CDP-004,8000,2400,Retail_User1
+CDP-005,12000,3800,Retail_User2
+CDP-006,30000,6000,Fund_Gamma
+CDP-007,10000,3100,Aggressive_01
+CDP-008,100000,20000,Institution_01
+CDP-009,18000,5200,Swing_Trader
+CDP-010,4000,1250,Micro_CDP

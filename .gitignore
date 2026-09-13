@@ -2,3 +2,6 @@ keys/
 .env
 __pycache__/
 *.png
+.pytest_cache/
+*.skey
+*.db
